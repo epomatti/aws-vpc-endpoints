@@ -1,10 +1,14 @@
 provider "aws" {
-  region = "sa-east-1"
+  region = local.region
 }
 
 ### Locals ###
 
+data "aws_caller_identity" "current" {}
+
 locals {
+  account_id        = data.aws_caller_identity.current.account_id
+  region            = "sa-east-1"
   affix             = "pe-sandbox"
   INADDR_ANY        = "0.0.0.0/0"
   availability_zone = "sa-east-1a"
@@ -210,5 +214,42 @@ resource "aws_instance" "main" {
   tags = {
     Name = "${local.affix}"
   }
+}
 
+### SQS Interface VPC Endpoint ###
+
+resource "aws_security_group" "aws_service" {
+  name        = "AllowAWSServiceConnectivity"
+  description = "Allow AWS Service connectivity via Interface Endpoints"
+  vpc_id      = aws_vpc.main.id
+}
+
+resource "aws_sqs_queue" "private_queue" {
+  name = "my-private-queue"
+}
+
+resource "aws_vpc_endpoint" "sqs" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${local.region}.sqs"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
+  vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
+  security_group_id = aws_security_group.aws_service.id
+}
+
+resource "aws_vpc_endpoint_policy" "main" {
+  vpc_endpoint_id = aws_vpc_endpoint.sqs.id
+  policy = jsonencode({
+    Statement = [{
+      Action   = ["sqs:SendMessage"]
+      Effect   = "Allow"
+      Resource = "arn:aws:sqs:${local.region}:${local.account_id}:${aws_sqs_queue.private_queue.name}"
+      Principal = {
+        AWS = aws_iam_role.main.arn
+      }
+    }]
+  })
 }
