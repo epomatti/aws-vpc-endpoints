@@ -224,36 +224,38 @@ resource "aws_security_group" "aws_service" {
   description = "Allow AWS Service connectivity via Interface Endpoints"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description = "TLS from VPC"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = [aws_vpc.main.cidr_block]
-  }
+  # ingress {
+  #   description = "TLS from VPC"
+  #   from_port   = 443
+  #   to_port     = 443
+  #   protocol    = "tcp"
+  #   cidr_blocks = [aws_vpc.main.cidr_block]
+  # }
 
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # egress {
+  #   from_port   = 443
+  #   to_port     = 443
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
 }
 
 resource "aws_sqs_queue" "private_queue" {
   name = "my-private-queue"
 }
 
-resource "aws_sqs_queue_policy" "test" {
+resource "aws_sqs_queue_policy" "allow_ec2_role" {
   queue_url = aws_sqs_queue.private_queue.url
   policy = jsonencode({
     Version = "2012-10-17"
     Id      = "sqspolicy"
     Statement = [{
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = ["sqs:SendMessage"]
-      Resource  = aws_sqs_queue.private_queue.arn
+      Effect = "Allow"
+      Principal = {
+        AWS = [aws_iam_role.main.arn]
+      }
+      Action   = ["sqs:SendMessage"]
+      Resource = aws_sqs_queue.private_queue.arn
     }]
   })
 }
@@ -287,16 +289,16 @@ resource "aws_vpc_endpoint_policy" "main" {
   #     }
   #   }]
   # })
-  policy = jsonencode({
-    Statement = [{
-      Action   = ["sqs:SendMessage"]
-      Effect   = "Allow"
-      Resource = "*"
-      Principal = {
-        AWS = "*"
-      }
-    }]
-  })
+  # policy = jsonencode({
+  #   Statement = [{
+  #     Action   = ["sqs:SendMessage"]
+  #     Effect   = "Allow"
+  #     Resource = "*"
+  #     Principal = {
+  #       AWS = "*"
+  #     }
+  #   }]
+  # })
 }
 
 ### Output ###
