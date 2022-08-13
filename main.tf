@@ -238,11 +238,11 @@ resource "aws_security_group" "aws_service" {
 }
 
 resource "aws_security_group_rule" "ingress_https_endpoint" {
-  type             = "ingress"
-  from_port        = 443
-  to_port          = 443
-  protocol         = "tcp"
-  cidr_blocks      = [aws_vpc.main.cidr_block]
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = [aws_vpc.main.cidr_block]
   security_group_id = aws_security_group.aws_service.id
 }
 
@@ -274,11 +274,6 @@ resource "aws_sqs_queue_policy" "allow_ec2_role" {
       }
       Action   = ["sqs:SendMessage"]
       Resource = aws_sqs_queue.private_queue.arn
-      # Condition = {
-      #   IpAddress = {
-      #     "aws:SourceIp" : aws_subnet.private.cidr_block
-      #   }
-      # }
     }]
   })
 }
@@ -303,29 +298,19 @@ resource "aws_vpc_endpoint_security_group_association" "sg_aws_service" {
   security_group_id = aws_security_group.aws_service.id
 }
 
-# resource "aws_vpc_endpoint_policy" "main" {
-#   vpc_endpoint_id = aws_vpc_endpoint.sqs.id
-#   # policy = jsonencode({
-#   #   Statement = [{
-#   #     Action   = ["sqs:SendMessage"]
-#   #     Effect   = "Allow"
-#   #     Resource = aws_sqs_queue.private_queue-arn
-#   #     Principal = {
-#   #       AWS = aws_iam_role.main.arn
-#   #     }
-#   #   }]
-#   # })
-#   policy = jsonencode({
-#     Statement = [{
-#       Action   = ["sqs:SendMessage"]
-#       Effect   = "Deny"
-#       Resource = "*"
-#       Principal = {
-#         AWS = "*"
-#       }
-#     }]
-#   })
-# }
+resource "aws_vpc_endpoint_policy" "main" {
+  vpc_endpoint_id = aws_vpc_endpoint.sqs.id
+  policy = jsonencode({
+    Statement = [{
+      Action   = ["sqs:SendMessage"]
+      Effect   = "Allow"
+      Resource = aws_sqs_queue.private_queue.arn
+      Principal = {
+        AWS = aws_iam_role.main.arn
+      }
+    }]
+  })
+}
 
 ### Output ###
 
