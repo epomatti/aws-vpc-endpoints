@@ -185,8 +185,6 @@ resource "aws_network_interface" "main" {
   subnet_id       = aws_subnet.private.id
   security_groups = [aws_default_security_group.default.id]
 
-  user_data = file("${path.module}/user-data.sh")
-
   tags = {
     Name = "ni-${local.affix}"
   }
@@ -204,6 +202,7 @@ resource "aws_instance" "main" {
 
   iam_instance_profile = aws_iam_instance_profile.main.id
   key_name             = aws_key_pair.deployer.key_name
+  user_data            = file("${path.module}/user-data.sh")
 
   # Detailed monitoring enabled
   monitoring = true
@@ -224,10 +223,39 @@ resource "aws_security_group" "aws_service" {
   name        = "AllowAWSServiceConnectivity"
   description = "Allow AWS Service connectivity via Interface Endpoints"
   vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = "TLS from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_sqs_queue" "private_queue" {
   name = "my-private-queue"
+}
+
+resource "aws_sqs_queue_policy" "test" {
+  queue_url = aws_sqs_queue.private_queue.url
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "sqspolicy"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = ["sqs:SendMessage"]
+      Resource  = aws_sqs_queue.private_queue.arn
+    }]
+  })
 }
 
 resource "aws_vpc_endpoint" "sqs" {
@@ -237,6 +265,11 @@ resource "aws_vpc_endpoint" "sqs" {
   private_dns_enabled = true
 }
 
+resource "aws_vpc_endpoint_subnet_association" "private_subnet" {
+  vpc_endpoint_id = aws_vpc_endpoint.sqs.id
+  subnet_id       = aws_subnet.private.id
+}
+
 resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
   vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
   security_group_id = aws_security_group.aws_service.id
@@ -244,14 +277,34 @@ resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
 
 resource "aws_vpc_endpoint_policy" "main" {
   vpc_endpoint_id = aws_vpc_endpoint.sqs.id
+  # policy = jsonencode({
+  #   Statement = [{
+  #     Action   = ["sqs:SendMessage"]
+  #     Effect   = "Allow"
+  #     Resource = aws_sqs_queue.private_queue-arn
+  #     Principal = {
+  #       AWS = aws_iam_role.main.arn
+  #     }
+  #   }]
+  # })
   policy = jsonencode({
     Statement = [{
       Action   = ["sqs:SendMessage"]
       Effect   = "Allow"
-      Resource = "arn:aws:sqs:${local.region}:${local.account_id}:${aws_sqs_queue.private_queue.name}"
+      Resource = "*"
       Principal = {
-        AWS = aws_iam_role.main.arn
+        AWS = "*"
       }
     }]
   })
+}
+
+### Output ###
+
+output "sqs_queue_url" {
+  value = aws_sqs_queue.private_queue.url
+}
+
+output "aws_cli_enqueue_command" {
+  value = "aws sqs send-message --queue-url ${aws_sqs_queue.private_queue.url} --message-body 'Hello'"
 }
