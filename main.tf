@@ -185,6 +185,8 @@ resource "aws_network_interface" "main" {
   subnet_id       = aws_subnet.private.id
   security_groups = [aws_default_security_group.default.id]
 
+  user_data = file("${path.module}/user-data.sh")
+
   tags = {
     Name = "ni-${local.affix}"
   }
