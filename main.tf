@@ -298,10 +298,10 @@ resource "aws_vpc_endpoint_subnet_association" "private_subnet" {
   subnet_id       = aws_subnet.private.id
 }
 
-# resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
-#   vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
-#   security_group_id = aws_security_group.aws_service.id
-# }
+resource "aws_vpc_endpoint_security_group_association" "sg_aws_service" {
+  vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
+  security_group_id = aws_security_group.aws_service.id
+}
 
 # resource "aws_vpc_endpoint_policy" "main" {
 #   vpc_endpoint_id = aws_vpc_endpoint.sqs.id
