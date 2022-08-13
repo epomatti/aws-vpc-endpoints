@@ -13,3 +13,5 @@ aws sqs send-message --queue-url 'https://sqs.sa-east-1.amazonaws.com/0000000000
 ```
 
 Run it to test the command.
+
+Reference: [Basic Amazon SQS policy examples](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-basic-examples-of-sqs-policies.html)

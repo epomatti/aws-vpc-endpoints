@@ -124,6 +124,10 @@ resource "aws_route" "nat_gateway" {
 # This will clean up all default entries
 resource "aws_default_security_group" "default" {
   vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "ec2-sg"
+  }
 }
 
 resource "aws_security_group_rule" "egress_http" {
@@ -217,28 +221,42 @@ resource "aws_instance" "main" {
   }
 }
 
+##################################
 ### SQS Interface VPC Endpoint ###
+##################################
+
+### Security Group ###
 
 resource "aws_security_group" "aws_service" {
   name        = "AllowAWSServiceConnectivity"
   description = "Allow AWS Service connectivity via Interface Endpoints"
   vpc_id      = aws_vpc.main.id
 
-  # ingress {
-  #   description = "TLS from VPC"
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = [aws_vpc.main.cidr_block]
-  # }
-
-  # egress {
-  #   from_port   = 443
-  #   to_port     = 443
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  # }
+  tags = {
+    Name = "interface-endpoint-sg"
+  }
 }
+
+resource "aws_security_group_rule" "ingress_https_endpoint" {
+  type             = "ingress"
+  from_port        = 443
+  to_port          = 443
+  protocol         = "tcp"
+  cidr_blocks      = [aws_vpc.main.cidr_block]
+  security_group_id = aws_security_group.aws_service.id
+}
+
+resource "aws_security_group_rule" "egress_https_endpoint" {
+  type              = "egress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.aws_service.id
+}
+
+
+# ### SQS Queue ###
 
 resource "aws_sqs_queue" "private_queue" {
   name = "my-private-queue"
@@ -256,9 +274,17 @@ resource "aws_sqs_queue_policy" "allow_ec2_role" {
       }
       Action   = ["sqs:SendMessage"]
       Resource = aws_sqs_queue.private_queue.arn
+      # Condition = {
+      #   IpAddress = {
+      #     "aws:SourceIp" : aws_subnet.private.cidr_block
+      #   }
+      # }
     }]
   })
 }
+
+
+# ### VPC Interface Endpoint ###
 
 resource "aws_vpc_endpoint" "sqs" {
   vpc_id              = aws_vpc.main.id
@@ -272,34 +298,34 @@ resource "aws_vpc_endpoint_subnet_association" "private_subnet" {
   subnet_id       = aws_subnet.private.id
 }
 
-resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
-  vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
-  security_group_id = aws_security_group.aws_service.id
-}
+# resource "aws_vpc_endpoint_security_group_association" "sg_ec2" {
+#   vpc_endpoint_id   = aws_vpc_endpoint.sqs.id
+#   security_group_id = aws_security_group.aws_service.id
+# }
 
-resource "aws_vpc_endpoint_policy" "main" {
-  vpc_endpoint_id = aws_vpc_endpoint.sqs.id
-  # policy = jsonencode({
-  #   Statement = [{
-  #     Action   = ["sqs:SendMessage"]
-  #     Effect   = "Allow"
-  #     Resource = aws_sqs_queue.private_queue-arn
-  #     Principal = {
-  #       AWS = aws_iam_role.main.arn
-  #     }
-  #   }]
-  # })
-  # policy = jsonencode({
-  #   Statement = [{
-  #     Action   = ["sqs:SendMessage"]
-  #     Effect   = "Allow"
-  #     Resource = "*"
-  #     Principal = {
-  #       AWS = "*"
-  #     }
-  #   }]
-  # })
-}
+# resource "aws_vpc_endpoint_policy" "main" {
+#   vpc_endpoint_id = aws_vpc_endpoint.sqs.id
+#   # policy = jsonencode({
+#   #   Statement = [{
+#   #     Action   = ["sqs:SendMessage"]
+#   #     Effect   = "Allow"
+#   #     Resource = aws_sqs_queue.private_queue-arn
+#   #     Principal = {
+#   #       AWS = aws_iam_role.main.arn
+#   #     }
+#   #   }]
+#   # })
+#   policy = jsonencode({
+#     Statement = [{
+#       Action   = ["sqs:SendMessage"]
+#       Effect   = "Deny"
+#       Resource = "*"
+#       Principal = {
+#         AWS = "*"
+#       }
+#     }]
+#   })
+# }
 
 ### Output ###
 
