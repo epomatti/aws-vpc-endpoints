@@ -1,4 +1,4 @@
-# AWS VPC Interface Endpoint sandbox
+# AWS VPC Interface Endpoint
 
 This sandbox implements a VPC Interface Endpoint to send messages to a SQS queue from an EC2 instance that runs in a private subnet.
 
