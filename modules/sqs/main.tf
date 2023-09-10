@@ -35,7 +35,7 @@ resource "aws_sqs_queue_policy" "allow_ec2_role" {
               "aws:sourceVpce" : "${var.vpce_id}"
             }
           }
-        },
+        }
       ]
     }
   )
