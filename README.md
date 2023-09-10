@@ -2,7 +2,7 @@
 
 This sandbox implements a VPC Interface Endpoint to send messages to a SQS queue from an EC2 instance that runs in a private subnet.
 
-<img src=".diagrams/endpoint.png" width=900 />
+<img src=".diagrams/architecture.png" />
 
 In addition to provisioning the core resources, policies will be configured to use proper conditions.
 
