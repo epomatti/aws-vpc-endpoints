@@ -19,6 +19,12 @@ terraform init
 terraform apply -auto-approve
 ```
 
+Connect to the EC2 instance:
+
+```sh
+aws ssm start-session --target i-00000000000000000 --region sa-east-1
+```
+
 Once the environment is created, connect to the EC2 instance using SSM. Confirm that the name is resolving to a private IP:
 
 ```sh
@@ -35,7 +41,7 @@ aws sts get-caller-identity
 Now send a message to the endpoint to the see the results:
 
 ```sh
-aws sqs send-message --queue-url https://sqs.sa-east-1.amazonaws.com/000000000000/my-private-queue --message-body 'Hello'
+aws sqs send-message --queue-url https://sqs.sa-east-1.amazonaws.com/000000000000/my-private-queue --message-body Hello
 ```
 
 ## Clean-up

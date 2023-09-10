@@ -10,14 +10,18 @@ resource "aws_sqs_queue_policy" "allow_ec2_role" {
       Version = "2012-10-17"
       Id      = "sqspolicy"
 
-      Statement = [{
-        Effect = "Allow"
-        Action = ["sqs:SendMessage"]
-        Principal = {
-          AWS = "${var.ec2_iam_role_arn}"
+      Statement = [
+        {
+          Effect = "Allow"
+          Action = [
+            "sqs:SendMessage"
+          ]
+          Principal = {
+            AWS = "${var.ec2_iam_role_arn}"
+          }
+          Resource = "${aws_sqs_queue.private_queue.arn}"
         }
-        Resource = "${aws_sqs_queue.private_queue.arn}"
-      }]
+      ]
     }
   )
 }

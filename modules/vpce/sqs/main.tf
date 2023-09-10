@@ -23,14 +23,18 @@ resource "aws_vpc_endpoint_policy" "main" {
   vpc_endpoint_id = aws_vpc_endpoint.sqs.id
 
   policy = jsonencode({
-    Statement = [{
-      Action   = ["sqs:SendMessage"]
-      Effect   = "Allow"
-      Resource = "${var.sqs_queue_arn}"
-      Principal = {
-        AWS = "${var.ec2_iam_role_arn}"
+    Statement = [
+      {
+        Action = [
+          "sqs:SendMessage"
+        ]
+        Effect   = "Allow"
+        Resource = "${var.sqs_queue_arn}"
+        Principal = {
+          AWS = "${var.ec2_iam_role_arn}"
+        }
       }
-    }]
+    ]
   })
 }
 
