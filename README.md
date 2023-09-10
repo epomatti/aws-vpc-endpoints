@@ -1,4 +1,4 @@
-# AWS VPC Interface Endpoint
+# AWS VPC Endpoints
 
 This sandbox implements a VPC Interface Endpoint to send messages to a SQS queue from an EC2 instance that runs in a private subnet.
 
@@ -61,9 +61,3 @@ aws sqs send-message --queue-url https://sqs.sa-east-1.amazonaws.com/00000000000
 ```sh
 terraform destroy
 ```
-
----
-
-References:
-- [Basic Amazon SQS policy examples](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-basic-examples-of-sqs-policies.html)
-- [SQS Endpoint Permissions](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-internetwork-traffic-privacy.html#sqs-vpc-endpoints)
