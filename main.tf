@@ -59,3 +59,13 @@ module "vpce_sqs" {
   sqs_queue_arn    = module.sqs.sqs_queue_arn
   ec2_iam_role_arn = module.app.iam_role_arn
 }
+
+module "vpce_kms" {
+  source           = "./modules/vpce/kms"
+  affix            = local.affix
+  vpc_id           = module.vpc.vpc_id
+  subnet_id        = module.vpc.subnet_app
+  aws_region       = var.aws_region
+  kms_key_arn      = module.kms.key_arn
+  ec2_iam_role_arn = module.app.iam_role_arn
+}
