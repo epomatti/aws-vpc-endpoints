@@ -3,6 +3,10 @@ resource "aws_vpc_endpoint" "kms" {
   service_name        = "com.amazonaws.${var.aws_region}.kms"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
+
+  tags = {
+    Name = "kms-vpce"
+  }
 }
 
 resource "aws_vpc_endpoint_subnet_association" "kms" {

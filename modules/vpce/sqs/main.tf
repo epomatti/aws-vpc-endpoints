@@ -3,6 +3,10 @@ resource "aws_vpc_endpoint" "sqs" {
   service_name        = "com.amazonaws.${var.aws_region}.sqs"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
+
+  tags = {
+    Name = "sqs-vpce"
+  }
 }
 
 resource "aws_vpc_endpoint_subnet_association" "private_subnet" {
