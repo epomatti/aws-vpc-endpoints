@@ -1,3 +1,7 @@
+ec2_id_rsa*
+
+
+
 # Local .terraform directories
 **/.terraform/*
 
