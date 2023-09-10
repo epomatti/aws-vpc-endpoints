@@ -45,6 +45,11 @@ module "sqs" {
   ec2_iam_role_arn = module.app.iam_role_arn
 }
 
+module "kms" {
+  source           = "./modules/kms"
+  ec2_iam_role_arn = module.app.iam_role_arn
+}
+
 module "vpce_sqs" {
   source           = "./modules/vpce/sqs"
   affix            = local.affix
