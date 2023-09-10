@@ -43,6 +43,7 @@ module "app" {
 module "sqs" {
   source           = "./modules/sqs"
   ec2_iam_role_arn = module.app.iam_role_arn
+  vpce_id          = module.vpce_sqs.vpce_id
 }
 
 module "kms" {

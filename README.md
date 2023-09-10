@@ -4,6 +4,18 @@ This sandbox implements a VPC Interface Endpoint to send messages to a SQS queue
 
 <img src=".diagrams/endpoint.png" width=900 />
 
+In addition to provisioning the core resources, policies will be configured to use proper conditions.
+
+The SQS queue will only accept `sqs:SendMessage` operations coming from the configured VPC Endpoint:
+
+```json
+"Condition": {
+  "StringNotEquals": {
+    "aws:sourceVpce": "vpce-1a2b3c4d"
+  }
+}
+```
+
 ## Setup
 
 Create the EC2 instance key pair material:
